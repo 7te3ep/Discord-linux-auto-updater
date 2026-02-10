@@ -1,72 +1,54 @@
-# Discord-linux-auto-updater
+# Automatic Discord Update at System Startup (Linux)
 
-Ce guide explique comment configurer une mise à jour **automatique, silencieuse et sans interaction utilisateur** de Discord **à chaque démarrage du PC**.
+This guide explains how to configure an automatic, non-interactive Discord update that runs at every system startup.
 
-✔ Télécharge automatiquement la dernière version officielle  
-✔ Compare la version installée avec la version disponible  
-✔ Installe la mise à jour si nécessaire  
-✔ Fonctionne sur Ubuntu / Debian / Linux Mint  
-
----
-
-## 📋 Prérequis
-
-- Distribution Linux basée sur Debian
-- Discord installé via le paquet `.deb`
-- Accès administrateur (`sudo`)
-- Connexion Internet au démarrage
+The script:
+- Downloads the latest official Discord `.deb`
+- Compares it with the installed version
+- Installs the update if a newer version is available
+- Runs silently with no user input
 
 ---
 
-## 📁 Étape 1 — Créer le script de mise à jour
+## Requirements
 
-Créer le fichier du script :
-
-    sudo nano /usr/local/bin/discord-auto-update.sh
-
-Collez le contenu suivant :
-
-    #!/usr/bin/env bash
-    set -e
-
-    WORKDIR="/tmp/discord-update"
-    URL="https://discord.com/api/download/stable?platform=linux&format=deb"
-
-    mkdir -p "$WORKDIR"
-    cd "$WORKDIR"
-
-    wget -q -O discord-latest.deb "$URL"
-
-    DEB_VERSION=$(dpkg-deb -f discord-latest.deb Version)
-    INSTALLED_VERSION=$(dpkg-query -W -f='${Version}' discord 2>/dev/null || echo "none")
-
-    if [ "$DEB_VERSION" != "$INSTALLED_VERSION" ]; then
-        chmod +x discord-latest.deb
-        dpkg -i discord-latest.deb >/dev/null 2>&1 || apt-get install -f -y
-    fi
-
-    rm -rf "$WORKDIR"
-
-Enregistrez et quittez (`Ctrl + O`, `Entrée`, `Ctrl + X`).
+- Debian-based Linux distribution (Ubuntu, Debian, Linux Mint, etc.)
+- Discord installed via `.deb`
+- Root access (sudo)
+- Internet connection available at boot
 
 ---
 
-## 🔐 Étape 2 — Rendre le script exécutable
+## Step 1 — Make the script executable
+
+Download script.sh :
+
+    chmod +x script.sh
+
+---
+
+## Step 2 — Install the script on the system
+
+Copy the script to a system-wide location:
+
+    sudo cp script.sh /usr/local/bin/discord-auto-update.sh
+
+Ensure it is executable:
 
     sudo chmod +x /usr/local/bin/discord-auto-update.sh
 
 ---
 
-## ⚙️ Étape 3 — Créer le service systemd
+## Step 3 — Create the systemd service
 
-Créer le fichier du service :
+Create the service file:
 
     sudo nano /etc/systemd/system/discord-auto-update.service
 
-Collez :
+Paste the following content:
 
     [Unit]
-    Description=Auto update Discord at boot
+    Description=Automatically update Discord at boot
     After=network-online.target
     Wants=network-online.target
 
@@ -78,9 +60,13 @@ Collez :
     [Install]
     WantedBy=multi-user.target
 
+Save and exit.
+
 ---
 
-## 🚀 Étape 4 — Activer le service
+## Step 4 — Enable the service
+
+Reload systemd and enable the service:
 
     sudo systemctl daemon-reexec
     sudo systemctl daemon-reload
@@ -88,23 +74,27 @@ Collez :
 
 ---
 
-## 🧪 Étape 5 — Test manuel (optionnel)
+## Step 5 — Optional manual test
+
+You can test the service without rebooting:
 
     sudo systemctl start discord-auto-update.service
     sudo systemctl status discord-auto-update.service
 
 ---
 
-## ✅ Résultat
+## Result
 
-- Discord se met à jour automatiquement au démarrage
-- Aucun popup
-- Aucune interaction utilisateur
-- Aucun processus persistant
+At every system startup:
+- Discord is checked for updates
+- A newer version is installed automatically if available
+- No prompts or user interaction occur
 
 ---
 
-## 🛑 Désinstallation
+## Disable / Uninstall
+
+To completely remove the automatic update:
 
     sudo systemctl disable discord-auto-update.service
     sudo rm /etc/systemd/system/discord-auto-update.service
@@ -113,8 +103,8 @@ Collez :
 
 ---
 
-## ℹ️ Notes
+## Notes
 
-- Utilise uniquement les sources officielles Discord
-- Fonctionne même sans interface graphique
-- Adaptable à d’autres logiciels `.deb`
+- Uses only the official Discord download endpoint
+- Does not keep background processes running
+- Can be adapted for other `.deb` based applications
