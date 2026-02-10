@@ -1,0 +1,1 @@
+# Discord-linux-auto-updater
